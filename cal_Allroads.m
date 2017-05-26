@@ -35,10 +35,9 @@ for i=1:days
         allComTrafficIndex{i,j,2} = (10000 + floor((j-1)/6)*100 + mod(j-1,6)*10);
         allComTrafficIndex{i,j,3} = 0;
         num = 0;
-        i,j
         for k=1:56
             [row_num ,meiyong]= find(D{i,1}{k,1}==allComTrafficIndex{i,j,2});
-            if isempty(row_num) %|| D{i,1}{k,1}(row_num,2)==0||D{i,1}{k,1}(row_num,4)==0
+            if isnan(D{i,1}{k,1}(row_num,5)) %|| D{i,1}{k,1}(row_num,2)==0||D{i,1}{k,1}(row_num,4)==0
                 continue;
             end
             len = 0;
@@ -52,17 +51,14 @@ for i=1:days
                 len =  Distance(a);
             end
             %youxiao_num(i,j) = youxiao_num(i,j)+1;
-            if  D{i,1}{k,1}(row_num,2)==0
+            if  D{i,1}{k,1}(row_num,2)<=0
                 if D{i,1}{k,1}(row_num,4)~=0
                     num = num + (1.0/D{i,1}{k,1}(row_num,4)*len);
                     allComTrafficIndex{i,j,3} = allComTrafficIndex{i,j,3} + D{i,1}{k,1}(row_num,5)*(1.0/D{i,1}{k,1}(row_num,4)*len);
-                    continue;
                 end
-            end
-            
-            if D{i,1}{k,1}(row_num,2)~=0
-                num = num + (D{i,1}{k,1}(row_num,2)/D{i,1}{k,1}(row_num,4)*len);
-                allComTrafficIndex{i,j,3} = allComTrafficIndex{i,j,3} + D{i,1}{k,1}(row_num,5)*(D{i,1}{k,1}(row_num,2)/D{i,1}{k,1}(row_num,4)*len);
+            else %D{i,1}{k,1}(row_num,2)>0
+                num = num + ((D{i,1}{k,1}(row_num,2)+1)/D{i,1}{k,1}(row_num,4)*len);
+                allComTrafficIndex{i,j,3} = allComTrafficIndex{i,j,3} + D{i,1}{k,1}(row_num,5)*((D{i,1}{k,1}(row_num,2)+1)/D{i,1}{k,1}(row_num,4)*len);
             end
 %             i,k,
             %k,len,Tindex = D{i,1}{k,1}(row_num,5),liuliang = D{i,1}{k,1}(row_num,2),speed = D{i,1}{k,1}(row_num,4),allnum = num,allindex = allComTrafficIndex{i,j,3}

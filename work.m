@@ -1,18 +1,18 @@
 
 % function work(allComTrafficIndex,heatmap_data,nums,place_name,D,pie_colorbar,pathDir)
 % function  [AM_rush,PM_rush,MeanRush,rush_most,mean_index,mean_rush_most,max_rush_most,nums,heatmap_data]=work(allComTrafficIndex,D,pathDir)
-% function  work(allComTrafficIndex,D,pathDir)
-function [AM_rush,PM_rush,MeanRush] = work(allComTrafficIndex)
+% function  [rush_most,mean_index,mean_rush_most,max_rush_most] = work(allComTrafficIndex,D,pathDir)
+function work(pathDir,allComTrafficIndex)
 
 %第一步
-[AM_rush,PM_rush,MeanRush] = calcAMPMRush(allComTrafficIndex);
-% AMPMVariationDiagram(allComTrafficIndex,0,1,pathDir);
-% AMPMVariationDiagram(allComTrafficIndex,1,2,pathDir);
-% [rush_most,mean_index,mean_rush_most,max_rush_most] = mostCongestion(allComTrafficIndex,0,3,pathDir);
-% mostCongestion(allComTrafficIndex,1,4,pathDir);
+% [AM_rush,PM_rush,MeanRush] = calcAMPMRush(allComTrafficIndex);
+AMPMVariationDiagram(allComTrafficIndex,0,1,pathDir);
+AMPMVariationDiagram(allComTrafficIndex,1,2,pathDir);
+[rush_most,mean_index,mean_rush_most,max_rush_most] = mostCongestion(allComTrafficIndex,0,3,pathDir);
+mostCongestion(allComTrafficIndex,1,4,pathDir);
 % heatmap_data = calcHeatmapData(D);
 % nums = calcNums(heatmap_data);
-% exportHeatmap(heatmap_data,D,pathDir)
+% exportHeatmap(heatmap_data,D,pathDir,5150000)
 
 % % % 第二步
 %  drawHeatmap(heatmap_data,place_name,D,1,1,pathDir)
@@ -20,7 +20,7 @@ function [AM_rush,PM_rush,MeanRush] = work(allComTrafficIndex)
 
 % %第三部步
 % filePath = [pathDir 'heatmap_交通指数_灰底.png']
-% savePath = [pathDir 'heatmap_交通指数_tm.png']
+% savePath = [pathDir 'heatmap_交通指数_透明.png']
 % heatmap_handle(filePath,savePath);
 
 %第四步
@@ -30,14 +30,14 @@ function [AM_rush,PM_rush,MeanRush] = work(allComTrafficIndex)
 % createPie(nums,1,1,pathDir);
 % createPie(nums,0,1,pathDir);
 
-% %第六步
+%第六步
 % pieFilePath = [pathDir '饼图_灰底.png']
 % savePath = [pathDir '饼图_透明.png']
 % pie_handle(pieFilePath,savePath)
 
 end
 
-function exportHeatmap(heatmap_data,D,pathDir)
+function exportHeatmap(heatmap_data,D,pathDir,BaseNum)
 %导出heatmap
 heatmap_data_header = cell(337,57);
 for i=2:57
@@ -50,7 +50,7 @@ for i=2:57
     heatmap_data_header{1,i} = D{1,1}{i-1,2};
 end
 for j=2:337
-    heatmap_data_header{j,1} = 5080000 + floor((j-2)/48)*10000 + floor((mod(j-2,48))/2) * 100 + (mod(j,2)*30);
+    heatmap_data_header{j,1} = BaseNum + floor((j-2)/48)*10000 + floor((mod(j-2,48))/2) * 100 + (mod(j,2)*30);
 end
 
 fp = fopen([pathDir 'heatmap_data_header.txt'],'wt');
@@ -183,24 +183,23 @@ num = zeros(24*2*7,56);
 for i=8:14
     for j=1:144
         for k=1:56
-
+            if (i-8)*48+floor((j-1)/3)+1 == 242 && k==47
+                i,j,k,D{i,1}{k,1}(row_num,5)
+            end
             [row_num ,meiyong]= find(D{i,1}{k,1}==(10000 + floor((j-1)/6)*100 + mod(j-1,6)*10));
-            if isempty(row_num)
+            if isnan(D{i,1}{k,1}(row_num,5))
                 continue;
             else
-                if D{i,1}{k,1}(row_num,5) <0
-                  i,j,k
-                 end
                 num((i-8)*48+floor((j-1)/3)+1,k) = num((i-8)*48+floor((j-1)/3)+1,k) +1;
                 heatmap_data((i-8)*48+floor((j-1)/3)+1,k) = heatmap_data((i-8)*48+floor((j-1)/3)+1,k) + D{i,1}{k,1}(row_num,5);
             end
         end
     end
 end
+% num(242,47)
 for i=1:size(num,1)
     for j=1:size(num,2)
         if num(i,j)==0
-            %i,j
             heatmap_data(i,j) = NaN;
         end;
     end
@@ -221,6 +220,7 @@ for i=1:size(heatmap_data,1)
         if heatmap_data(i,j) == 10
             nums(5) = nums(5) +1;
         else
+            i,j,heatmap_data(i,j)
             nums(floor(heatmap_data(i,j)/2)+1) = nums(floor(heatmap_data(i,j)/2)+1) + 1;
         end
     end
@@ -251,7 +251,6 @@ end
 rush_most(:,1) = rush_most(:,1)./rush_most(:,2);
 mean_index = mean_index./3;
 max_rush_most = 1;
-mean_rush_most = 0;
 for i=1:size(rush_most(:,1))
     if rush_most(i,1) > rush_most(max_rush_most,1)
         max_rush_most = i;
@@ -278,6 +277,7 @@ ylabel('交通指数','FontSize',20)
 set(gcf,'PaperUnits','inches','PaperPosition',[0 0 943 449],'position',[200,200,943,449]);
 leg = legend({'本周最堵一天（周五）','本周平均'},'Position',[0.2 0.88 0.1 0.1]);
 set(gca,'FontSize',18,'Position',[0.07 0.12 0.9 0.9]);
+set(gca,'YLim',[2 9]);%设置要显示坐标刻度
 set(leg,'Box','off');
 box off
 %白底
@@ -292,7 +292,7 @@ set(gca,'color',[204/255,204/255,204/255]);
 set(gca,'ycolor','w');
 set(gca,'xcolor','w');
 set(leg,'TextColor',[1,1,1]);
-myFileName = [pathDir '本周最堵一天（周五）与周平均比较（交通指数）','.png'];
+myFileName = [pathDir '本周最堵一天（周五）与周平均比较（交通指数）_透明','.png'];
 A=getframe(gcf);
 A = A.cdata;
 %A = imread(myFileName);
@@ -329,14 +329,16 @@ function AMPMVariationDiagram(allComTrafficIndex,flag,fig,pathDir)
 AM_rush_day = zeros(7,2);
 PM_rush_day = zeros(7,2);
 for i=8:14
-    for j=46:57  %早高峰
+    for j=45:56  %早高峰
+        i,j,allComTrafficIndex{i,j,3}
         if ~isnan(allComTrafficIndex{i,j,3})
             AM_rush_day(i-7,1) = AM_rush_day(i-7,1) + allComTrafficIndex{i,j,3};
             AM_rush_day(i-7,2) = AM_rush_day(i-7,2)+1;
 
         end
     end
-    for j=103:114  %晚高峰
+    for j=102:113  %晚高峰
+        i,j,allComTrafficIndex{i,j,3}
         if ~isnan(allComTrafficIndex{i,j,3})
             PM_rush_day(i-7,1) = PM_rush_day(i-7,1) + allComTrafficIndex{i,j,3};
             PM_rush_day(i-7,2) = PM_rush_day(i-7,2)+1;
@@ -413,7 +415,7 @@ set(get(b(2),'BaseLine'),'Color','w')
 set(gca,'ycolor','w');
 set(gca,'xcolor','w');
 %axes1 = axes('Parent',fig11,'Position',[0.05 0.52 0.43 0.43]);
-myFileName = [pathDir '本周早晚高峰变化（交通指数）' '.png'];
+myFileName = [pathDir '本周早晚高峰变化（交通指数）_透明' '.png'];
 A=getframe(gcf);
 A = A.cdata;
 %A = imread(myFileName);
@@ -437,14 +439,14 @@ function [AM_rush,PM_rush,MeanRush] = calcAMPMRush(allComTrafficIndex)
 %     tmpDataAM2 = allComTrafficIndex{8:12,45:56,3};
 %     tmpDataPM2 = allComTrafficIndex{8:12,102:113,3};
 %上周数据
-    for i=2:5
-        for j=46:57  %早高峰
+    for i=1:5
+        for j=45:56  %早高峰
             if ~isnan(allComTrafficIndex{i,j,3})
                 AM_rush(1,1) = AM_rush(1,1) + allComTrafficIndex{i,j,3};
                 AM_rush(1,2) = AM_rush(1,2)+1
             end
         end
-        for j=103:114  %晚高峰
+        for j=102:113  %晚高峰
             if ~isnan(allComTrafficIndex{i,j,3})
                 PM_rush(1,1) = PM_rush(1) + allComTrafficIndex{i,j,3};
                 PM_rush(1,2) = PM_rush(1,2)+1
@@ -453,13 +455,13 @@ function [AM_rush,PM_rush,MeanRush] = calcAMPMRush(allComTrafficIndex)
     end
     %本周数据
     for i=8:12
-        for j=46:57  %早高峰
+        for j=45:56  %早高峰
             if ~isnan(allComTrafficIndex{i,j,3})
                 AM_rush(2,1) = AM_rush(2,1) + allComTrafficIndex{i,j,3};
                 AM_rush(2,2) = AM_rush(2,2)+1
             end
         end
-        for j=103:114  %晚高峰
+        for j=102:113  %晚高峰
             if ~isnan(allComTrafficIndex{i,j,3})
                 PM_rush(2,1) = PM_rush(2,1) + allComTrafficIndex{i,j,3}
                 PM_rush(2,2) = PM_rush(2,2)+1

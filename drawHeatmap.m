@@ -20,6 +20,7 @@ xx=datestr((s:d:e)','mm-dd HH:MM:ss')
     load mycolor
     max_color_value = floor(max(max(heatmap_data))/100)*100
     max_color_value = 300
+    heatmap_data(1,1) = 0
     h = heatmap(heatmap_data',[],yy,[],'TickAngle', 90, 'Colormap',mycolor,'Colorbar', {'NorthOutside'},'NaNColor',[0 0 0],'ShowAllTicks',1,'MinColorValue',0,'MaxColorValue',max_color_value,'TickFontSize',5);
 label ='  星期一                          星期二                          星期三                          星期四                          星期五                          星期六                          星期日'
 xlabel(label,'FontSize',16)

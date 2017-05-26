@@ -12,8 +12,11 @@ function [D] = calTrafficIndex(D)
              tmp2 = tmp1{j,1};
              [rowT2,cc] = size(tmp2);
              for k=1:rowT2
-                 i,j,k
-                res = cal(tmp1{j,3},tmp2(k,4));
+                if isnan(tmp2(k,4))
+                    res = NaN;
+                else
+                    res = cal(tmp1{j,3},tmp2(k,4));
+                end
                 D{i,1}{j,1}(k,5) = res;
              end
              
@@ -30,5 +33,8 @@ function [res] = cal(C,v)
         afa = 10.0 / (log(1.2*C) - log(0.2*C));
         S = -afa * log(0.2*C);
         res = afa*log(1.2*C-v)+S;
+    end
+    if res < 0
+        res = 0;
     end
 end
